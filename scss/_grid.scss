@@ -1,0 +1,80 @@
+@use "sass:map"; // Import map module
+@use "sass:math"; // Import math module
+
+// Breakpoint
+$grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1400px,
+);
+
+// Custom project container
+$container-max-widths: (
+    sm: 540px,
+    md: 720px,
+    lg: 960px,
+    xl: 1170px,
+    xxl: 1320px,
+);
+
+$grid-columns: 12;
+$grid-gutter-width: 30px;
+
+// .container, .container-fluid
+.container-fluid {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.container {
+    @extend .container-fluid;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $grid-gutter-width;
+
+    // Sử dụng flex 1 0 auto để các cột có thể co giãn
+    [class*="col-"] {
+        flex: 1 0 auto;
+    }
+}
+
+.col {
+    flex: 1 0; // Sử dụng flex 1 0 để các cột có thể co giãn
+}
+
+// Mixins
+@mixin makeMediaQuery($demensions, $bypass: false) {
+    @if $bypass {
+        @content;
+    } @else {
+        @media (min-width: $demensions) {
+            @content;
+        }
+    }
+}
+
+// Create breakpoint with @each
+@each $breakpoint, $dimensions in $grid-breakpoints {
+    $max-width: map.get($container-max-widths, $breakpoint);
+    $infix: if($breakpoint == xs, "", "-#{$breakpoint}");
+
+    @include makeMediaQuery($dimensions, $breakpoint == xs) {
+        .container {
+            max-width: $max-width;
+        }
+
+        @for $i from 1 through $grid-columns {
+            .col#{$infix}-#{$i} {
+                // Tính toán để width - gap giữa các cột để đạt được 100% width
+                width: calc((math.div(100%, $grid-columns) * $i) - #{$grid-gutter-width});
+            }
+        }
+    }
+}
