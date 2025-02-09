@@ -1,7 +1,7 @@
-@use "sass:math";
 @use "sass:map";
+@use "sass:math";
 
-// Grid breakpoints
+// Breakpoints, dimension, container, row, column, v.v
 $grid-breakpoints: (
     xs: 0,
     sm: 576px,
@@ -10,8 +10,6 @@ $grid-breakpoints: (
     xl: 1200px,
     xxl: 1400px,
 );
-
-// Grid container max widths
 $container-max-widths: (
     sm: 540px,
     md: 720px,
@@ -19,19 +17,26 @@ $container-max-widths: (
     xl: 1140px,
     xxl: 1320px,
 );
-
-// Grid columns and gutter width
 $grid-columns: 12;
-$grid-gutter-width: 30px;
+$grid-gutter-width: 30px !default;
+$gutters: (
+    0: 0,
+    1: 0.25,
+    2: 0.5,
+    3: 1,
+    4: 1.5,
+    5: 3,
+);
 
-// guuter padding placeholder
 %gutter-padding {
-    padding-left: $grid-gutter-width * 0.5;
-    padding-right: $grid-gutter-width * 0.5;
+    padding-left: calc(var(--grid-gutter-x) * 0.5);
+    padding-right: calc(var(--grid-gutter-x) * 0.5);
 }
 
-// Grid container, row, and column styles
 .container-fluid {
+    --grid-gutter-x: #{$grid-gutter-width};
+    --grid-gutter-y: 0;
+
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -45,24 +50,21 @@ $grid-gutter-width: 30px;
 .row {
     display: flex;
     flex-wrap: wrap;
-    margin-left: -$grid-gutter-width * 0.5;
-    margin-right: -$grid-gutter-width * 0.5;
+    margin-top: calc(var(--grid-gutter-y) * -1);
+    margin-left: calc(var(--grid-gutter-x) * 0.5 * -1);
+    margin-right: calc(var(--grid-gutter-x) * 0.5 * -1);
 
-    &[class*="row-cols-"] > *,
-    [class*="col-"] {
-        flex: 0 0 auto;
+    > * {
+        margin-top: var(--grid-gutter-y);
         @extend %gutter-padding;
     }
 }
 
-// Grid columns
 .col {
     flex: 1 0;
-    @extend %gutter-padding;
 }
 
-// Grid make-media-query
-@mixin makeMediaQuery($dimension, $bypass: false) {
+@mixin make-media-query($dimension, $bypass: false) {
     @if $bypass {
         @content;
     } @else {
@@ -72,16 +74,16 @@ $grid-gutter-width: 30px;
     }
 }
 
-// Grid make-row-columns, make-columns, and make-offset
-@mixin makeRowColumns($infix) {
+@mixin make-row-columns($infix) {
     @for $i from 1 through $grid-columns * 0.5 {
         .row-cols#{$infix}-#{$i} > * {
+            flex: 0 0 auto;
             width: math.div(100%, $i);
         }
     }
 }
 
-@mixin makeColumns($infix) {
+@mixin make-columns($infix) {
     @for $i from 1 through $grid-columns {
         .col#{$infix}-#{$i} {
             width: math.div(100%, $grid-columns) * $i;
@@ -89,10 +91,24 @@ $grid-gutter-width: 30px;
     }
 }
 
-@mixin makeOffset($infix) {
+@mixin make-offsets($infix) {
     @for $i from 0 to $grid-columns {
         .offset#{$infix}-#{$i} {
             margin-left: if($i > 0, math.div(100%, $grid-columns) * $i, 0);
+        }
+    }
+}
+
+@mixin make-gutters($infix) {
+    @each $i, $ratio in $gutters {
+        .g#{$infix}-#{$i},
+        .gx#{$infix}-#{$i} {
+            --grid-gutter-x: #{$grid-gutter-width * $ratio};
+        }
+
+        .g#{$infix}-#{$i},
+        .gy#{$infix}-#{$i} {
+            --grid-gutter-y: #{$grid-gutter-width * $ratio};
         }
     }
 }
@@ -102,14 +118,27 @@ $grid-gutter-width: 30px;
     $is-xs: $breakpoint == xs;
     $infix: if($is-xs, "", "-#{$breakpoint}");
 
-    @include makeMediaQuery($dimension, $is-xs) {
+    @include make-media-query($dimension, $is-xs) {
         .container {
             max-width: $max-width;
         }
 
-        // Make row columns, columns, and offset
-        @include makeRowColumns($infix);
-        @include makeColumns($infix);
-        @include makeOffset($infix);
+        @include make-row-columns($infix);
+
+        @include make-columns($infix);
+
+        @include make-offsets($infix);
+
+        @include make-gutters($infix);
     }
 }
+
+/*
+    - Quy ước đặt tên biến?
+    - File map có tác dụng gì?
+    - Khác biệt giữa comment CSS và SASS?
+    - Chuyển từ CSS sang Sass và ngược lại?
+    - Khác nhau giữa @import và @use là gì?
+    - Cần ít hoặc nhiều hơn 7 thư mục trong 7-1 pattern thì sao?
+    - Cách minify (compressed) Sass output
+*/

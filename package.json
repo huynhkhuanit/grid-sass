@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npm run sass:watch",
-    "sass": "sass scss:assets/css",
-    "sass:watch": "sass --watch scss:assets/css"
+    "start": "sass scss:assets/css -w",
+    "minify": "sass scss:assets/css -s compressed"
   },
   "keywords": [],
   "author": "",
